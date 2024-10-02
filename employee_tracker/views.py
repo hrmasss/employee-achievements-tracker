@@ -1,9 +1,17 @@
-from rest_framework import status
+from rest_framework import status, viewsets, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
-from .serializers import UserSerializer, LoginSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from .models import Employee, Department, Achievement
+from .serializers import (
+    UserSerializer,
+    LoginSerializer,
+    EmployeeSerializer,
+    DepartmentSerializer,
+    AchievementSerializer,
+)
 
 
 class RegisterView(APIView):
@@ -54,3 +62,38 @@ class LogoutView(APIView):
     def post(self, request):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
+
+
+class EmployeeViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows employee CRUD operations.
+    """
+
+    queryset = Employee.objects.all().order_by("-id")
+    serializer_class = EmployeeSerializer
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
+    filterset_fields = ["department"]
+    search_fields = ["name", "email"]
+    ordering_fields = ["name", "department__name"]
+
+
+class DepartmentViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows department CRUD operations.
+    """
+
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
+
+
+class AchievementViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows achievement CRUD operations.
+    """
+
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
