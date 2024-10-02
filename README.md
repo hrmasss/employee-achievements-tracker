@@ -15,7 +15,7 @@ Employee Achievement Tracker is a Django-based API that helps organizations mana
 
 ### Prerequisites
 
--   Python 3.x
+-   Python 3.12
 -   [Poetry](https://python-poetry.org/docs/#installation)
 
 ### Installation
