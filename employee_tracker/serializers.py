@@ -28,7 +28,7 @@ class LoginSerializer(serializers.Serializer):
     Serializer for user login.
     """
 
-    username = serializers.CharField()
+    email = serializers.EmailField()
     password = serializers.CharField()
 
 
