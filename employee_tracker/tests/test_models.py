@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.db import transaction
 from django.db.utils import IntegrityError
 from employee_tracker.models import (
     Department,
@@ -46,14 +47,16 @@ class ModelTestCase(TestCase):
 
     def test_unique_constraints(self):
         """Test that unique constraints raise IntegrityError."""
-        with self.assertRaises(IntegrityError):
-            Department.objects.create(name="IT")  # Duplicate department name
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                Department.objects.create(name="IT")  # Duplicate department name
 
-        with self.assertRaises(IntegrityError):
-            Employee.objects.create(
-                name="Jane Doe",
-                email="john@example.com",  # Duplicate email
-                phone="0987654321",
-                address="456 Elm St",
-                department=self.department,
-            )
+        with transaction.atomic():
+            with self.assertRaises(IntegrityError):
+                Employee.objects.create(
+                    name="Jane Doe",
+                    email="john@example.com",  # Duplicate email
+                    phone="0987654321",
+                    address="456 Elm St",
+                    department=self.department,
+                )
