@@ -19,7 +19,7 @@ from .serializers import (
 
 class RegisterView(APIView):
     """
-    API view for user registration.
+    API endpoint for user registration.
     """
 
     permission_classes = [AllowAny]
@@ -39,7 +39,7 @@ class RegisterView(APIView):
 
 class LoginView(APIView):
     """
-    API view for user login.
+    API endpoint for user login.
     """
 
     permission_classes = [AllowAny]
@@ -68,17 +68,13 @@ class LoginView(APIView):
 
 class LogoutView(APIView):
     """
-    API view for user logout.
+    API endpoint for user logout.
     """
 
     @extend_schema(request=None, responses={200: "Logout successful"})
     def post(self, request):
-        if request.user.is_authenticated:
-            request.user.auth_token.delete()
-            return Response(status=status.HTTP_200_OK)
-        return Response(
-            {"error": "User not logged in."}, status=status.HTTP_401_UNAUTHORIZED
-        )
+        request.user.auth_token.delete()
+        return Response(status=status.HTTP_200_OK)
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):

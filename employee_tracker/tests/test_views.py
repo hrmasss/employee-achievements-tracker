@@ -2,6 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework.authtoken.models import Token
 from employee_tracker.models import Department, Employee, Achievement
 from django.contrib.auth.models import User
 
@@ -11,10 +12,12 @@ class APITestCase(TestCase):
         """Create a test user and initial data for API tests."""
         self.client = APIClient()
         self.user = User.objects.create_user(username="testuser", password="12345")
-        self.client.force_authenticate(user=self.user)
-
-        self.department = Department.objects.create(name="HR")
-        self.achievement = Achievement.objects.create(name="Best Performance")
+        self.token = Token.objects.create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.token.key}")
+        self.department = Department.objects.create(name="HR", created_by=self.user)
+        self.achievement = Achievement.objects.create(
+            name="Best Performance", created_by=self.user
+        )
 
     def test_create_employee(self):
         """Test the creation of a new Employee object via the API."""
@@ -36,6 +39,7 @@ class APITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Employee.objects.count(), 1)
         self.assertEqual(Employee.objects.get().name, "Jane Doe")
+        self.assertEqual(Employee.objects.get().created_by, self.user)
 
     def test_get_employee_list(self):
         """Test retrieving the list of Employee objects via the API."""
@@ -45,6 +49,7 @@ class APITestCase(TestCase):
             phone="0987654321",
             address="456 Elm St",
             department=self.department,
+            created_by=self.user,
         )
         url = reverse("employee-list")
         response = self.client.get(url)
@@ -59,6 +64,7 @@ class APITestCase(TestCase):
             phone="0987654321",
             address="456 Elm St",
             department=self.department,
+            created_by=self.user,
         )
         url = reverse("employee-detail", kwargs={"pk": employee.id})
         data = {
@@ -80,6 +86,7 @@ class APITestCase(TestCase):
             phone="0987654321",
             address="456 Elm St",
             department=self.department,
+            created_by=self.user,
         )
         url = reverse("employee-detail", kwargs={"pk": employee.id})
         response = self.client.delete(url)
