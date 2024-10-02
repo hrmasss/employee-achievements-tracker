@@ -85,3 +85,29 @@ class APITestCase(TestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Employee.objects.count(), 0)
+
+    def test_register_user(self):
+        """Test user registration via the API."""
+        url = reverse("register")
+        data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "newpassword123",
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("token", response.data)
+
+    def test_login_user(self):
+        """Test user login via the API."""
+        url = reverse("login")
+        data = {"username": "testuser", "password": "12345"}
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("token", response.data)
+
+    def test_logout_user(self):
+        """Test user logout via the API."""
+        url = reverse("logout")
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
