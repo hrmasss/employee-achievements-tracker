@@ -1,4 +1,6 @@
 from rest_framework import status, viewsets, filters
+from rest_framework.permissions import AllowAny
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -20,6 +22,8 @@ class RegisterView(APIView):
     API view for user registration.
     """
 
+    permission_classes = [AllowAny]
+
     @extend_schema(request=UserSerializer, responses={201: UserSerializer})
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -37,6 +41,8 @@ class LoginView(APIView):
     """
     API view for user login.
     """
+
+    permission_classes = [AllowAny]
 
     @extend_schema(
         request=LoginSerializer,
@@ -67,8 +73,12 @@ class LogoutView(APIView):
 
     @extend_schema(request=None, responses={200: "Logout successful"})
     def post(self, request):
-        request.user.auth_token.delete()
-        return Response(status=status.HTTP_200_OK)
+        if request.user.is_authenticated:
+            request.user.auth_token.delete()
+            return Response(status=status.HTTP_200_OK)
+        return Response(
+            {"error": "User not logged in."}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -87,6 +97,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     search_fields = ["name", "email"]
     ordering_fields = ["name", "department__name"]
 
+    def get_queryset(self):
+        return self.queryset.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
 
 class DepartmentViewSet(viewsets.ModelViewSet):
     """
@@ -96,6 +112,12 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
+    def get_queryset(self):
+        return self.queryset.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
 
 class AchievementViewSet(viewsets.ModelViewSet):
     """
@@ -104,3 +126,9 @@ class AchievementViewSet(viewsets.ModelViewSet):
 
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
+
+    def get_queryset(self):
+        return self.queryset.filter(created_by=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
