@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import extend_schema
 from .models import Employee, Department, Achievement
 from .serializers import (
     UserSerializer,
@@ -19,6 +20,7 @@ class RegisterView(APIView):
     API view for user registration.
     """
 
+    @extend_schema(request=UserSerializer, responses={201: UserSerializer})
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
@@ -36,6 +38,10 @@ class LoginView(APIView):
     API view for user login.
     """
 
+    @extend_schema(
+        request=LoginSerializer,
+        responses={200: "Login successful", 401: "Invalid credentials"},
+    )
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
@@ -59,6 +65,7 @@ class LogoutView(APIView):
     API view for user logout.
     """
 
+    @extend_schema(request=None, responses={200: "Logout successful"})
     def post(self, request):
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
